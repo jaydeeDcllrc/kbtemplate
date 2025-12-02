@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simple Knowledge Base</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      color: #222;
+    }
+    .kb-wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+    .kb-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .kb-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 0;
+    }
+    .kb-subtitle {
+      font-size: 13px;
+      color: #555;
+      margin-top: 4px;
+    }
+    .kb-search-container {
+      flex: 1 1 260px;
+      min-width: 240px;
+      position: relative;
+    }
+    .kb-search-input {
+      width: 100%;
+      padding: 8px 32px 8px 10px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+    .kb-search-input:focus {
+      border-color: #0078d4;
+      box-shadow: 0 0 0 1px rgba(0,120,212,0.35);
+    }
+    .kb-search-icon {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    .kb-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .kb-filter-label {
+      font-size: 13px;
+      color: #555;
+    }
+    .kb-select {
+      padding: 6px 8px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      min-width: 160px;
+      background: #fff;
+    }
+    .kb-stats {
+      font-size: 12px;
+      color: #777;
+      margin-bottom: 10px;
+    }
+    .kb-articles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .kb-article {
+      background: #fff;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+      padding: 12px 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .kb-article-title {
+      font-size: 15px;
+      font-weight: bold;
+      margin: 0 0 2px;
+    }
+    .kb-article-meta {
+      font-size: 11px;
+      color: #777;
+      margin-bottom: 4px;
+    }
+    .kb-article-category {
+      font-weight: bold;
+    }
+    .kb-article-body {
+      font-size: 13px;
+      color: #444;
+      line-height: 1.4;
+    }
+    .kb-tags {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .kb-tag {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+    }
+    .kb-empty {
+      font-size: 14px;
+      color: #555;
+      padding: 12px;
+      background: #fff;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+    }
+    @media (max-width: 600px) {
+      .kb-header {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="kb-wrapper">
+    <header class="kb-header">
+      <div>
+        <h1 class="kb-title">Knowledge Base</h1>
+        <p class="kb-subtitle">Search by keyword or filter by category to find answers.</p>
+      </div>
+      <div class="kb-search-container">
+        <input
+          id="kbSearchInput"
+          type="text"
+          class="kb-search-input"
+          placeholder="Search articles..."
+        />
+        <span class="kb-search-icon">&#128269;</span>
+      </div>
+    </header>
+
+    <section class="kb-filters">
+      <span class="kb-filter-label">Category:</span>
+      <select id="kbCategorySelect" class="kb-select">
+        <option value="all">All categories</option>
+      </select>
+    </section>
+
+    <div id="kbStats" class="kb-stats"></div>
+
+    <section id="kbArticles" class="kb-articles"></section>
+    <div id="kbEmptyState" class="kb-empty" style="display:none;">
+      No matching articles. Try another keyword or category.
+    </div>
+  </div>
+
+  <script>
+    // ===== 1) Configure your articles here =====
+    // You can replace or extend this list with your real KB items.
+    const kbArticlesData = [
+      {
+        id: 1,
+        title: "How to reset your email password",
+        category: "IT Support",
+        body: "Use the password self-service portal to reset your company email password. You will need your employee ID and recovery email or phone.",
+        tags: ["password", "email", "login"],
+        lastUpdated: "2025-01-10"
+      },
+      {
+        id: 2,
+        title: "Requesting annual leave",
+        category: "HR",
+        body: "Submit your annual leave request through the HR system at least 5 working days before your planned leave date.",
+        tags: ["leave", "vacation", "holiday"],
+        lastUpdated: "2025-01-03"
+      },
+      {
+        id: 3,
+        title: "VPN connection troubleshooting",
+        category: "IT Support123123123",
+        body: "If you cannot connect to VPN, verify your internet connection, check your credentials, and make sure the VPN client is up to date.",
+        tags: ["vpn", "remote access"],
+        lastUpdated: "2024-12-20"
+      },
+      {
+        id: 4,
+        title: "How to update your personal information",
+        category: "HR",
+        body: "Update your address, phone number, and emergency contacts in the HR portal under 'My Profile'.",
+        tags: ["profile", "address", "phone"],
+        lastUpdated: "2024-11-30"
+      }
+    ];
+
+    // ===== 2) Helper functions =====
+    const kbSearchInput = document.getElementById("kbSearchInput");
+    const kbCategorySelect = document.getElementById("kbCategorySelect");
+    const kbArticlesContainer = document.getElementById("kbArticles");
+    const kbStats = document.getElementById("kbStats");
+    const kbEmptyState = document.getElementById("kbEmptyState");
+
+    // Build category dropdown from articles
+    function initCategories() {
+      const categories = new Set();
+      kbArticlesData.forEach(a => {
+        if (a.category) categories.add(a.category);
+      });
+      Array.from(categories).sort().forEach(cat => {
+        const opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        kbCategorySelect.appendChild(opt);
+      });
+    }
+
+    function matchesSearch(article, term) {
+      if (!term) return true;
+      const t = term.toLowerCase();
+      const title = (article.title || "").toLowerCase();
+      const body = (article.body || "").toLowerCase();
+      const category = (article.category || "").toLowerCase();
+      const tags = (article.tags || []).join(" ").toLowerCase();
+      return (
+        title.includes(t) ||
+        body.includes(t) ||
+        category.includes(t) ||
+        tags.includes(t)
+      );
+    }
+
+    function matchesCategory(article, selectedCategory) {
+      if (selectedCategory === "all") return true;
+      return (article.category || "") === selectedCategory;
+    }
+
+    function filterArticles() {
+      const term = kbSearchInput.value.trim();
+      const category = kbCategorySelect.value;
+
+      const filtered = kbArticlesData.filter(a =>
+        matchesSearch(a, term) && matchesCategory(a, category)
+      );
+
+      renderArticles(filtered, term, category);
+    }
+
+    function renderArticles(list, term, category) {
+      kbArticlesContainer.innerHTML = "";
+
+      if (!list.length) {
+        kbEmptyState.style.display = "block";
+        kbStats.textContent = "0 articles found.";
+        return;
+      } else {
+        kbEmptyState.style.display = "none";
+      }
+
+      list.forEach(a => {
+        const articleDiv = document.createElement("article");
+        articleDiv.className = "kb-article";
+
+        const titleEl = document.createElement("h2");
+        titleEl.className = "kb-article-title";
+        titleEl.textContent = a.title || "(Untitled article)";
+
+        const metaEl = document.createElement("div");
+        metaEl.className = "kb-article-meta";
+        const categoryText = a.category ? a.category : "Uncategorized";
+        const updatedText = a.lastUpdated ? ` • Updated: ${a.lastUpdated}` : "";
+        metaEl.innerHTML = `<span class="kb-article-category">${categoryText}</span>${updatedText}`;
+
+        const bodyEl = document.createElement("p");
+        bodyEl.className = "kb-article-body";
+        bodyEl.textContent = a.body || "";
+
+        articleDiv.appendChild(titleEl);
+        articleDiv.appendChild(metaEl);
+        articleDiv.appendChild(bodyEl);
+
+        if (a.tags && a.tags.length) {
+          const tagsWrap = document.createElement("div");
+          tagsWrap.className = "kb-tags";
+          a.tags.forEach(tag => {
+            const tagEl = document.createElement("span");
+            tagEl.className = "kb-tag";
+            tagEl.textContent = tag;
+            tagsWrap.appendChild(tagEl);
+          });
+          articleDiv.appendChild(tagsWrap);
+        }
+
+        kbArticlesContainer.appendChild(articleDiv);
+      });
+
+      const total = list.length;
+      const base = `${total} article${total !== 1 ? "s" : ""} found`;
+      const parts = [];
+      if (term) parts.push(`matching "${term}"`);
+      if (category !== "all") parts.push(`in category "${category}"`);
+      kbStats.textContent = parts.length ? `${base} ${parts.join(" ")}` : base + ".";
+    }
+
+    // ===== 3) Init =====
+    initCategories();
+    renderArticles(kbArticlesData);
+
+    kbSearchInput.addEventListener("input", filterArticles);
+    kbCategorySelect.addEventListener("change", filterArticles);
+  </script>
+</body>
+</html>
