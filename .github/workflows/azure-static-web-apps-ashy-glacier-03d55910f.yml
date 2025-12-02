@@ -20,6 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
+          with:
+          app_location: "/knowledgebase"
+          api_location: ""
+          output_location: "/"
           submodules: true
           lfs: false
       - name: Install OIDC Client from Core Package
@@ -56,3 +60,4 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           action: "close"
+
